@@ -51,24 +51,26 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late Future<List<Group>> futureGroups;
-  int _counter = 0;
+  late Future<List<Feed>> futureFeeds;
+  // int _counter = 0;
 
   @override
   void initState() {
     super.initState();
     futureGroups = fetchGroups();
+    futureFeeds = fetchFeeds();
   }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  // void _incrementCounter() {
+  // setState(() {
+  // // This call to setState tells the Flutter framework that something has
+  // // changed in this State, which causes it to rerun the build method below
+  // // so that the display can reflect the updated values. If we changed
+  // // _counter without calling setState(), then the build method would not be
+  // // called again, and so nothing would appear to happen.
+  // _counter++;
+  // });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -104,23 +106,45 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-            FutureBuilder<List<Group>>(
-              future: futureGroups,
+            FutureBuilder<List<Feed>>(
+              future: futureFeeds,
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data != null) {
-                  var names = "";
-                  for (var group in snapshot.data!) {
-                    names += group.name;
-                  }
+                  // var names = "";
+                  // for (var feed in snapshot.data!) {
+                  // names += feed.name;
+                  // }
 
-                  return Text(names);
+                  // return Text(names);
+
+                  return Card(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const ListTile(
+                          leading: Icon(Icons.album),
+                          title: Text('The Enchanted Nightingale'),
+                          subtitle: Text(
+                              'Music by Julie Gable. Lyrics by Sidney Stein.'),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: const Text('BUY TICKETS'),
+                              onPressed: () {/* ... */},
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              child: const Text('LISTEN'),
+                              onPressed: () {/* ... */},
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
                 } else if (snapshot.hasError) {
                   return Text("${snapshot.error}");
                 }
@@ -132,11 +156,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      // floatingActionButton: FloatingActionButton(
+      // // onPressed: _incrementCounter,
+      // tooltip: 'Increment',
+      // child: Icon(Icons.add),
+      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
@@ -172,7 +196,7 @@ class Post {
 class Feed {
   final String id;
   final String name;
-  final String groupID;
+  final List<dynamic> groupID;
   final String description;
   final String uri;
   final String type;
@@ -192,7 +216,7 @@ class Feed {
       name: json['name'],
       groupID: json['groupID'],
       description: json['description'],
-      uri: json['uri'],
+      uri: json['URI'],
       type: json['type'],
     );
   }
@@ -219,10 +243,6 @@ Future<List<Group>> fetchGroups() async {
   final response = await http.get(Uri.parse('http://localhost:3030/groups'));
 
   if (response.statusCode == 200) {
-    // If the server did return a 200 OK response,
-    // then parse the JSON.
-    // return Group.fromJson(jsonDecode(response.body));
-
     List decoded = jsonDecode(response.body);
     List<Group> groups = <Group>[];
     for (var group in decoded) {
@@ -233,6 +253,44 @@ Future<List<Group>> fetchGroups() async {
   } else {
     // If the server did not return a 200 OK response,
     // then throw an exception.
-    throw Exception('Failed to load album');
+    throw Exception('Failed to load groups');
+  }
+}
+
+Future<List<Feed>> fetchFeeds() async {
+  final response = await http.get(Uri.parse('http://localhost:3030/feeds'));
+
+  if (response.statusCode == 200) {
+    List decoded = jsonDecode(response.body);
+    List<Feed> feeds = <Feed>[];
+    for (var feed in decoded) {
+      feeds.add(Feed.fromJson(feed));
+    }
+
+    return feeds;
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load feeds');
+  }
+}
+
+Future<List<Post>> fetchAllPosts() async {
+  final response =
+      await http.get(Uri.parse('http://localhost:3030/feeds/posts'));
+
+  if (response.statusCode == 200) {
+    Map<String, dynamic> decoded = jsonDecode(response.body);
+    List postList = decoded['posts'];
+    List<Post> posts = <Post>[];
+    for (var post in postList) {
+      posts.add(Post.fromJson(post));
+    }
+
+    return posts;
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load feeds');
   }
 }
