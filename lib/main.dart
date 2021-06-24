@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:metacomposite_ui/types.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -50,15 +52,16 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late Future<List<Group>> futureGroups;
-  late Future<List<Feed>> futureFeeds;
-  // int _counter = 0;
+  // late Future<List<Group>> futureGroups;
+  // late Future<List<Feed>> futureFeeds;
+  late Future<List<Post>> futurePosts;
 
   @override
   void initState() {
     super.initState();
-    futureGroups = fetchGroups();
-    futureFeeds = fetchFeeds();
+    // futureGroups = fetchGroups();
+    // futureFeeds = fetchFeeds();
+    futurePosts = fetchAllPosts();
   }
 
   // void _incrementCounter() {
@@ -106,45 +109,16 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            FutureBuilder<List<Feed>>(
-              future: futureFeeds,
+            FutureBuilder<List<Post>>(
+              future: futurePosts,
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data != null) {
-                  // var names = "";
-                  // for (var feed in snapshot.data!) {
-                  // names += feed.name;
-                  // }
+                  var cards = <Widget>[];
+                  for (var posts in snapshot.data!) {
+                    cards.add(buildPostCards(posts));
+                  }
 
-                  // return Text(names);
-
-                  return Card(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        const ListTile(
-                          leading: Icon(Icons.album),
-                          title: Text('The Enchanted Nightingale'),
-                          subtitle: Text(
-                              'Music by Julie Gable. Lyrics by Sidney Stein.'),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            TextButton(
-                              child: const Text('BUY TICKETS'),
-                              onPressed: () {/* ... */},
-                            ),
-                            const SizedBox(width: 8),
-                            TextButton(
-                              child: const Text('LISTEN'),
-                              onPressed: () {/* ... */},
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
+                  return Column(children: cards);
                 } else if (snapshot.hasError) {
                   return Text("${snapshot.error}");
                 }
@@ -163,78 +137,34 @@ class _MyHomePageState extends State<MyHomePage> {
       // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
-}
 
-class Post {
-  final String title;
-  final String description;
-  final String content;
-  final String link;
-  final String imageURL;
-  final String feedID;
-
-  Post({
-    required this.title,
-    required this.description,
-    required this.content,
-    required this.link,
-    required this.imageURL,
-    required this.feedID,
-  });
-
-  factory Post.fromJson(Map<String, dynamic> json) {
-    return Post(
-        title: json['title'],
-        description: json['description'],
-        content: json['content'],
-        link: json['link'],
-        imageURL: json['imageURL'],
-        feedID: json['feedID']);
-  }
-}
-
-class Feed {
-  final String id;
-  final String name;
-  final List<dynamic> groupID;
-  final String description;
-  final String uri;
-  final String type;
-
-  Feed({
-    required this.id,
-    required this.name,
-    required this.groupID,
-    required this.description,
-    required this.uri,
-    required this.type,
-  });
-
-  factory Feed.fromJson(Map<String, dynamic> json) {
-    return Feed(
-      id: json['ID'],
-      name: json['name'],
-      groupID: json['groupID'],
-      description: json['description'],
-      uri: json['URI'],
-      type: json['type'],
-    );
-  }
-}
-
-class Group {
-  final String id;
-  final String name;
-
-  Group({
-    required this.id,
-    required this.name,
-  });
-
-  factory Group.fromJson(Map<String, dynamic> json) {
-    return Group(
-      id: json['ID'],
-      name: json['name'],
+  Widget buildPostCards(Post posts) {
+    return Card(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const ListTile(
+            leading: Icon(Icons.album),
+            title: Text('The Enchanted Nightingale'),
+            subtitle: Text('Music by Julie Gable. Lyrics by Sidney Stein.'),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              TextButton(
+                child: const Text('BUY TICKETS'),
+                onPressed: () {/* ... */},
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                child: const Text('LISTEN'),
+                onPressed: () {/* ... */},
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -281,6 +211,11 @@ Future<List<Post>> fetchAllPosts() async {
 
   if (response.statusCode == 200) {
     Map<String, dynamic> decoded = jsonDecode(response.body);
+
+    if (decoded['posts'] == Null) {
+      throw Exception('Failed to load feeds');
+    }
+
     List postList = decoded['posts'];
     List<Post> posts = <Post>[];
     for (var post in postList) {
