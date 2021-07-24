@@ -3,7 +3,7 @@ class Post {
   final String description;
   final String content;
   final String link;
-  final String imageURL;
+  final String? imageURL;
   final String feedID;
 
   Post({

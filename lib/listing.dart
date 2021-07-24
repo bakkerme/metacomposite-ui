@@ -83,34 +83,39 @@ class _ListingState extends State<Listing> {
   }
 
   Widget _buildPostCards(Post post) {
+    var items = <Widget>[
+      ListTile(
+        title: Text(post.title),
+        subtitle: Text(post.feedID),
+      ),
+    ];
+
+    if (post.imageURL != null) {
+      items.add(Flexible(
+          child: Image(
+        image: NetworkImage(post.imageURL!),
+        width: 344,
+        height: 194,
+        fit: BoxFit.cover,
+      )));
+    }
+
+    items.add(Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          post.description,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.5,
+          ),
+        )));
+
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ListTile(
-            title: Text(post.title),
-            subtitle: Text(post.feedID),
-          ),
-          Flexible(
-            child: Image(
-              image: NetworkImage(post.imageURL),
-              width: 344,
-              height: 194,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                post.description,
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ))
-        ],
+        children: items,
       ),
     );
   }
